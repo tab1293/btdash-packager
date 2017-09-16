@@ -228,7 +228,7 @@ func (m *MetaInfo) UpdateInfoHash() (err error) {
 	return
 }
 
-func CreateTorrentFile(inputFile string, outputTorrentFile string) {
+func CreateTorrentFile(inputFile string, segments []Segment, outputTorrentFile string) {
 	fi, err := os.Stat(inputFile)
 	if err != nil {
 		os.Exit(1)
@@ -252,7 +252,7 @@ func CreateTorrentFile(inputFile string, outputTorrentFile string) {
 	m.Info = i
 	m.UpdateInfoHash()
 	m.Announce = "http://tracker.vanitycore.co:6969/announce"
-	m.Segments = GetSegments(inputFile)
+	m.Segments = segments
 
 	f, err := os.Create(outputTorrentFile)
 	defer f.Close()

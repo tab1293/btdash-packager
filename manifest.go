@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -155,7 +156,15 @@ func GetSegments(filePath string) []Segment {
 
 	segments[segmentCount-1].End = fileSize
 	return segments
+}
 
-	// b, _ := json.MarshalIndent(segments, "", "    ")
-	// fmt.Printf("%s\n", string(b))
+func WriteSegmentsToFile(segments []Segment, outputFile string) error {
+	f, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+	return enc.Encode(segments)
 }

@@ -1,56 +1,51 @@
 package main
 
 import (
-	"fmt"
-	// "encoding/json"
 	"flag"
+	"fmt"
 	"os"
-	"os/exec"
 	"path"
 )
 
 var Args struct {
-	Input    string
-	Output   string
-	Transmux bool
+	Output         string
+	ForceTranscode bool
 }
 
 func init() {
-	flag.StringVar(&Args.Input, "input", "", "Input file")
-	flag.BoolVar(&Args.Transmux, "transmux", false, "Should the input file be transmuxed")
-	flag.StringVar(&Args.Output, "output", "", "Output directory for torrent")
+	flag.BoolVar(&Args.ForceTranscode, "force-transcode", false, "Should the input file be transmuxed regardless of if it has to")
+	flag.StringVar(&Args.Output, "output", "./", "Output directory for torrent and video files")
 }
 
 func main() {
 	flag.Parse()
 
-	if Args.Input == "" {
+	if len(os.Args) < 2 {
 		fmt.Printf("No input specified\n")
 		os.Exit(1)
 	}
 
-	if Args.Output == "" {
-		Args.Output = "/tmp/btdash"
+	input := os.Args[1]
+	if input == "" {
+		fmt.Printf("No input specified\n")
+		os.Exit(1)
 	}
 
-	exists, err := pathExists(Args.Output)
-	if !exists || err != nil {
-		os.Mkdir(Args.Output, 0755)
-	}
-
-	var ffmpegCmd *exec.Cmd
-	if Args.Transmux {
-		ffmpegCmd = transmuxCmd(Args.Input, path.Join(Args.Output, "out.mp4"))
+	ffmpegCmd, err := FFmpegCmd(input, Args.ForceTranscode, Args.Output)
+	if err != nil {
+		fmt.Printf("FFmpeg command error: %s\n", err)
+		os.Exit(1)
 	}
 
 	if ffmpegCmd != nil {
 		ffmpegCmd.Run()
 	}
 
-	CreateTorrentFile(path.Join(Args.Output, "out.mp4"), path.Join(Args.Output, "out.torrent"))
+	outputVideoFile := path.Join(Args.Output, "out.mp4")
+	outputTorrentFile := path.Join(Args.Output, "out.torrent")
+	outputJsonFile := path.Join(Args.Output, "out.json")
 
-	// segments := generateManifest(path.Join(Args.Output, "out.mp4"))
-
-	// b, _ := json.MarshalIndent(segments, "", "    ")
-	// fmt.Printf("%s\n", string(b))
+	segments := GetSegments(outputVideoFile)
+	CreateTorrentFile(outputVideoFile, segments, outputTorrentFile)
+	WriteSegmentsToFile(segments, outputJsonFile)
 }
