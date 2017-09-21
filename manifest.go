@@ -28,6 +28,7 @@ func ScaleTime(ot int64, timescale uint32) time.Duration {
 }
 
 type Segment struct {
+	Index     int
 	Start     int64
 	End       int64
 	StartTime int64
@@ -101,6 +102,7 @@ func GetSegments(filePath string) []Segment {
 
 		if tag == "sidx" && firstSidx {
 			seg := Segment{}
+			seg.Index = segmentCount
 			seg.Start = pos
 			if segmentCount > 0 {
 				segments[segmentCount-1].End = pos - 1

@@ -200,6 +200,7 @@ func (m *MetaInfo) Bencode(w io.Writer) (err error) {
 		for i := range m.Segments {
 			s := map[string]interface{}{}
 			seg := m.Segments[i]
+			s["index"] = seg.Index
 			s["start"] = seg.Start
 			s["start_time"] = seg.StartTime
 			s["end"] = seg.End

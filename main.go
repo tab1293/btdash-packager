@@ -10,10 +10,12 @@ import (
 var Args struct {
 	Output         string
 	ForceTranscode bool
+	JSONSideCar    bool
 }
 
 func init() {
 	flag.BoolVar(&Args.ForceTranscode, "force-transcode", false, "Should the input file be transmuxed regardless of if it has to")
+	flag.BoolVar(&Args.JSONSideCar, "json", false, "Output JSON formatted manifest")
 	flag.StringVar(&Args.Output, "output", "./", "Output directory for torrent and video files")
 }
 
@@ -43,9 +45,12 @@ func main() {
 
 	outputVideoFile := path.Join(Args.Output, "out.mp4")
 	outputTorrentFile := path.Join(Args.Output, "out.torrent")
-	outputJsonFile := path.Join(Args.Output, "out.json")
 
 	segments := GetSegments(outputVideoFile)
 	CreateTorrentFile(outputVideoFile, segments, outputTorrentFile)
-	WriteSegmentsToFile(segments, outputJsonFile)
+
+	if Args.JSONSideCar {
+		outputJsonFile := path.Join(Args.Output, "out.json")
+		WriteSegmentsToFile(segments, outputJsonFile)
+	}
 }
