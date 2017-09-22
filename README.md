@@ -1,7 +1,7 @@
 # btdash-packager
 The goal of this project is to create a DASH like video delivery techinque through a BitTorrent network. This tool encodes 
 a given video file in to a DASH formatted MP4, analyzes the file, and then creates a torrent bundle with additional AV/segment information 
-embed in the torrent file. This torrent file can then be used by supported players to play back the video file with full seek control.
+embed in the torrent file. This torrent file can then be used by supported players ([btdash-http-player](https://github.vimeows.com/thomas/btdash-http-player)) to play back the video file with full seek control.
 
 ## Usage
 ```
