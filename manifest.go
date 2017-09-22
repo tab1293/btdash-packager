@@ -27,6 +27,35 @@ func ScaleTime(ot int64, timescale uint32) time.Duration {
 	}
 }
 
+type Manifest struct {
+	Duration int64
+	Bitrate  int64
+	Segments []Segment
+}
+
+func (m Manifest) toMap() map[string]interface{} {
+	mm := map[string]interface{}{}
+
+	mm["duration"] = m.Duration
+	mm["bitrate"] = m.Bitrate
+
+	var ms []map[string]interface{}
+	for i := range m.Segments {
+		s := map[string]interface{}{}
+		seg := m.Segments[i]
+		s["index"] = seg.Index
+		s["start"] = seg.Start
+		s["start_time"] = seg.StartTime
+		s["end"] = seg.End
+		s["end_time"] = seg.EndTime
+		ms = append(ms, s)
+	}
+
+	mm["segments"] = ms
+
+	return mm
+}
+
 type Segment struct {
 	Index     int
 	Start     int64
@@ -35,34 +64,18 @@ type Segment struct {
 	EndTime   int64
 }
 
-func readByte(r io.Reader) uint32 {
-	b := []byte{0}
-	io.ReadFull(r, b)
-	return uint32(b[0])
-}
+func GetManifest(filePath string) (Manifest, error) {
+	m := Manifest{}
+	av, err := GetAVFileInfo(filePath)
+	if err != nil {
+		return m, err
+	}
 
-func read16(r io.Reader) uint32 {
-	var v uint16
-	binary.Read(r, binary.BigEndian, &v)
-	return uint32(v)
-}
+	m.Duration = int64(av.Duration)
+	m.Bitrate = av.Bitrate
+	m.Segments = GetSegments(filePath)
 
-func read24(r io.Reader) uint32 {
-	b := []byte{0, 0, 0}
-	io.ReadFull(r, b)
-	return (uint32(b[0]) << 16) | (uint32(b[1]) << 8) | uint32(b[2])
-}
-
-func read32(r io.Reader) uint32 {
-	var v uint32
-	binary.Read(r, binary.BigEndian, &v)
-	return v
-}
-
-func read64(r io.Reader) uint64 {
-	var v uint64
-	binary.Read(r, binary.BigEndian, &v)
-	return v
+	return m, nil
 }
 
 func GetSegments(filePath string) []Segment {
@@ -169,4 +182,15 @@ func WriteSegmentsToFile(segments []Segment, outputFile string) error {
 
 	enc := json.NewEncoder(f)
 	return enc.Encode(segments)
+}
+
+func WriteManifestToFile(manifest Manifest, outputFile string) error {
+	f, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+	return enc.Encode(manifest)
 }

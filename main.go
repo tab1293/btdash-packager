@@ -46,11 +46,19 @@ func main() {
 	outputVideoFile := path.Join(Args.Output, "out.mp4")
 	outputTorrentFile := path.Join(Args.Output, "out.torrent")
 
-	segments := GetSegments(outputVideoFile)
-	CreateTorrentFile(outputVideoFile, segments, outputTorrentFile)
+	// segments := GetSegments(outputVideoFile)
+	// CreateTorrentFile(outputVideoFile, segments, outputTorrentFile)
+
+	manifest, err := GetManifest(outputVideoFile)
+	if err != nil {
+		fmt.Printf("Get manifest error: %s\n", err)
+		os.Exit(1)
+	}
+	CreateTorrentFile(outputVideoFile, manifest, outputTorrentFile)
 
 	if Args.JSONSideCar {
 		outputJsonFile := path.Join(Args.Output, "out.json")
-		WriteSegmentsToFile(segments, outputJsonFile)
+		// WriteSegmentsToFile(manifest, outputJsonFile)
+		WriteManifestToFile(manifest, outputJsonFile)
 	}
 }

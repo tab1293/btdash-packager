@@ -167,7 +167,7 @@ type MetaInfo struct {
 	CreatedBy    string `bencode:"created by"`
 	Encoding     string
 
-	Segments []Segment
+	Manifest Manifest
 }
 
 func (m *MetaInfo) Bencode(w io.Writer) (err error) {
@@ -195,20 +195,9 @@ func (m *MetaInfo) Bencode(w io.Writer) (err error) {
 	if m.Encoding != "" {
 		mi["encoding"] = m.Encoding
 	}
-	if m.Segments != nil {
-		var ms []map[string]interface{}
-		for i := range m.Segments {
-			s := map[string]interface{}{}
-			seg := m.Segments[i]
-			s["index"] = seg.Index
-			s["start"] = seg.Start
-			s["start_time"] = seg.StartTime
-			s["end"] = seg.End
-			s["end_time"] = seg.EndTime
-			ms = append(ms, s)
-		}
-		mi["segments"] = ms
-	}
+
+	mi["manifest"] = m.Manifest.toMap()
+
 	bencode.Marshal(w, mi)
 	return
 }
@@ -229,7 +218,7 @@ func (m *MetaInfo) UpdateInfoHash() (err error) {
 	return
 }
 
-func CreateTorrentFile(inputFile string, segments []Segment, outputTorrentFile string) {
+func CreateTorrentFile(inputFile string, manifest Manifest, outputTorrentFile string) {
 	fi, err := os.Stat(inputFile)
 	if err != nil {
 		os.Exit(1)
@@ -253,7 +242,8 @@ func CreateTorrentFile(inputFile string, segments []Segment, outputTorrentFile s
 	m.Info = i
 	m.UpdateInfoHash()
 	m.Announce = "http://tracker.vanitycore.co:6969/announce"
-	m.Segments = segments
+	m.Manifest = manifest
+	// m.Segments = segments
 
 	f, err := os.Create(outputTorrentFile)
 	defer f.Close()
